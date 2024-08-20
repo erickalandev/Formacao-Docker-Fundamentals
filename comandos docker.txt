@@ -1,0 +1,199 @@
+			realizando download de imagens
+
+docker images -> mostra todas as images que tenho baixada
+
+docker run nm_image -> roda um container com a imagem 
+
+docker ps -> mostra os conteiners que estão em execução e '-a' para mostrar containers que não estao mais em execução
+
+			executando conteiner
+
+docker run nm_image sleep 10 -> executa um container com a imagem e finaliza em após 10s
+
+docker stop nm_do_NAMES_ou_CONTAINER_ID -> Força a parada do container que estava em execução através do nome ou id
+
+docker run -it nm_image -> roda o container, e o -it faz com que voce entre dentro do conteiner
+
+cat /etc/*release* -> é o arquivo que mostra os dados da imagem, como versão, url, nome...
+
+exit -> sair do conteiner
+
+		    executando aplicações no container
+
+docker run -dti image -> roda um container e deixa rodando em segundo plano, fazendo ele nao parar automaticamente
+
+docker exec -it 338 /bin/bash -> o 'exec' é para executar o container / '-it' seria para interagir com o container / o '388' são as iniciais do id já que não se repetem / o '/bin/bash' é o comando que deseja acessar
+
+			excluindo e nomeando conteiners
+
+docker rm 388 -> 'rm' exclui o conteiner '388' é os 3 primeiros caracteres do id
+
+docker rmi nm_image -> 'rmi' exclui a imagem 'nm_image' é a imagem que vai ser excluida
+
+docker run -dit nm_image -> caso ele não encontrar a imagem, é feito uma busca e é baixado essa imagem
+
+docker run -dit --name Ubuntu-erick ubuntu -> '--name' nomeia o conteiner, 'Ubuntu-erick' é o nome atribuido e 'ubuntu' é a imagem
+
+			copiando arquivos para o conteiner
+
+docker cp arquivo.txt Ubuntu-A:/destino -> 'cp' copia o dado, 'arquivo.txt' é o dado que estou copiando, 'Ubunutu-A' é o nome do conteiner que criei, ':/destino' é o local onde sera guardado o arquivo
+
+			copiando arquivos do conteiner
+
+docker cp Ubuntu-A:/destino/arquivo.txt /home -> é a ação inversa
+
+				TAGs
+
+docker pull debian:9 -> 'pull' é para baixar a imagem que contem no dockerhub e o ":9" indica qual versão pegar, sem o indicativo é baixado a versão mais recente
+
+docker run -dti debian:9 -> por mais q já tenha baixado a imagem, sem a tag ':9' indicando a versão ele entenderia que pegaria a ultima, baixando a nova versão, agora se eu quisesse rodar somente a versão, no caso 9 teria q por a tag
+
+			criando um conteiner do MySQL
+
+baixar do dockerhub a imagem
+
+docker run -e MYSQL_ROOT_PASSWORD=Senha123 --name mysql-A -d -p 3306:3306 mysql
+-> '-e' setar variaveis de ambiente
+-> '-p' setar a porta
+
+mysql -u root -p --protocol=tcp 
+-> após entrar dentro do conteiner mysql
+-> '-u' é para dizer qual usuario esta logando 
+-> '-p' pra porta(como deixei a padrão 3306 nao precisa especificar) 
+-> '--protocol' é o protocolo de rede que é mostrado quando usa o 'ps'
+
+saindo do conteiner mysql
+
+docker inspect mysql-A -> detalha todas as informações daquele conteiner, inclusive o ip da rede daquele conteiner, cada conteiner tem seu proprio ip, usaremos ela para se conectar em caso de outras maquinas
+
+apt -y install mysql-client -> ao baixar ele pega a rede do container, facilitando o acesso, podendo digitar os comando pela origem da maquina, sem precisa entrar dentro do conteiner, depois entrar dentro do mysqlsql que esta dentro do container.
+
+               parando e reiniciando docker
+
+docker start [conteiner] -> restartar o conteiner quando estiver parado
+
+		Montando mount(volume) um local de armazenamento
+
+docker run -e MYSQL_ROOT_PASSWORD=Senha123 --name mysql-A -d -p 3306:3306 --volume=/data/mysql-A:/var/lib/mysql mysql
+-> '--volume' é o comando de diretório par salvar os dados do conteiner ->'/data/mysql-A' é caminho de um diretório externo (salvando os dados do banco na maquina fisica e nao somente no conteiner em caso de excluir por acidente, tem o dado na maquina fisica)
+->':/var/lib/mysql' é o diretorio de dentro do conteiner onde é salvado os dados internos
+ 		exemplos de tipo de mount na pratica
+docker run -dti --mount type=bind,src=/data/debian-A,dst=/data debian
+-> '--mount' é o comando pra configurar o volume do container
+-> 'type=bind' é o tipo de volume que quero usar
+-> ',src=' é para indicar o local do meu bkp
+-> ',dst=' é o destino da onde os dados seram pegos
+o bind é utilizado quando vc especifica um diretorio pra bkp do conteiner
+
+docker run -dti --mount type=bind,src=/data/debian-A,dst=/data,ro debian
+-> ',ro' significa que os arquivos serão somente para leitura e nao poderar ser modificado
+
+docker volume create data-debian -> cria um volume na pasta padrão do docker '/var/lib/docker/volumes'
+
+docker run -dti --mount type=volume,src=data-debian,dst=/data debian
+-> o tipo volume já busca armazenamento na pasta padrão do docker, por isso no 'src' so é passado o nome do volume, pra esse caso não é possivel indicar um diretorio criado
+
+docker volume rm data-debian -> remove o volume, mas antes verifique se os containers existem ou estao em execução, caso sim deve parar eles
+
+			exemplo: apache conteiner
+
+docker run --name apache-A -d -p 80:80 --volume=/data/apache-A:/usr/local/apache2/htdocs httpd
+-> '-p' é a porta do container
+-> '/usr/local/apache2/htdocs' é a pasta raiz do container do apache, isso é mostrado na propria documentação lá no docker hub
+
+docker container prune -> o 'prune' é utilizado pra remover tudo, ao inves de ficar de um em um, tambem serve pra volume
+
+docker volume prume
+
+			limitando memoria e CPU
+
+docker stats nomeconteiner -> mostra os status do container: CPU, memoria usada, memoria limite, %memoria, entrada e saida de internet, entrada e saida de dados e PIDS (qtd de processos)
+
+docker update debian-A -m 128M --cpus 0.2 -> 
+'-m' -> especificar a qtd de memoria a ser limitada
+'--cpus' -> % de uso da CPU
+
+docker run --name ubuntu-C -dti -m 128M --cpus 0.2 ubuntu -> dessa forma tambem funciona, mas aqui vc esta especificando logo de cara o tamnho de memoria e uso de CPU do conteiner
+
+apt -y install stress -> é um serviço para estressar, serve para testar o CPU 
+
+stress --cpu 1 --vm-bytes 50m --vm 1 --vm-bytes 50m ->
+'--cpu 1' -> qtd de CPUs irei estressar
+'--vm 1' -> qtd de memoria
+'--vm-bytes 50m' -> qtd de bytes que sera enviado
+
+docker info -> pra saber as informações do servidor
+
+docker logs nmContainer -> mostrar o log do container
+
+docker top nmcontainer -> visualizar os processos de dentro do container
+
+			REDES
+
+docker network ls -> mostra a lista de redes disponiveis
+
+docker network inspect nm_rede -> mostra as informações da rede, uma delas esta os conteiners que estao naquela rede
+
+apt-get install -y iputils-ping -> instalar o serviço de ping
+
+docker network create nm_da_rede -> cria uma rede
+
+docker run -dti --name Ubuntu-A --network minha-rede ubuntu ->
+'--network' -> especifica em qual rede o container vai ficar,quando nao incluido por padrão é colocado na rede 'bridge'
+
+			primeiro docker file
+   (criação do dockerfile esta no outro arquivo de conhecimento docker)
+
+docker build . -t python-ubuntu ->
+build -> é a contrução do container através do dockerfile criado
+
+'.' -> o ponto é o caminho onde está o dockerfile, no caso, esse ponto foi usado porque eu já estava dentro do diretório onde foi criado o arquivo,mas poderia ser /images/ubuntu-python que é o caminho onde esta o arquivo
+
+python-ubuntu -> é o nome da imagem q vai ser criada
+
+tar -czf site.tar ./ -> 
+'tar' -> é basicamente o mesmo serviço de compactação zip, war... 
+'-czf' -> comando padrão incluido pra compactar arquivo
+'site.tar' -> nome do arquivo
+'./'-> é o caminho que será armazenado, como já estava no diretório o './' salva no diretorio onde estou
+
+docker image build -t debian-apache:1.0 -> codigo a ser rodado após criar o dockerfile de apache
+
+ 		Registry criando um servidor de imagens
+
+após baixar o container registry do docker hub utilize esse comando pra rodar a imagem
+
+docker run -d -p 5000:5000 --restart=always --name registry registry:2 ->
+--restart -> caso houver algum problema ou um restart suba imediatamente o container 
+
+docker image tag [imageID] [ip_do_servidor]:5000/my-go-app:1.0 ->
+tag-> cria uma nova tag(nome da imagem)
+[imageID] -> é o id da imagem que vai ser trocada
+[ip_do_servidor]:5000 -> indicando a porta e o servidor
+/my-go-app:1.0 -> essa é a nova tag com a versão da imagem
+
+curl [ip_do_servidor]:5000/v2/_catalog -> 
+curl -> checar se existem alguma imagem
+[ip_do_servidor]:5000/v2/_catalog ->'/v2/_catalog' é o caminho que tem a lista de catalogos
+
+docker push [ip_do_servidor]:5000/my-go-app:1.0 ->
+push -> empurra uma imagem, joga a imagem para outro lugar
+
+pode acontecer de barrar por questões de segurança, pois estou enviando uma imagem http e nao https para resolver isso é necessario criar um arquivo que diga que é seguro essa imagem q estou enviando pro servidor novo
+
+nano /etc/docker/daemon.json ->
+{"insecure-registries":["[ip_do_servidor]:5000"]}
+
+systemctl restart docker para restartar o servidor e pegar a nova configuração, depois dar o push de novo
+
+			docker compose
+
+apt-get install docker-compose
+
+docker-compose up -d -> para subir os containers dentro do docker-compose.yaml
+
+docker-compose down -d -> para parar os constainers
+
+
+
+
