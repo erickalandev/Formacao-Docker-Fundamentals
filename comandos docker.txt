@@ -30,6 +30,7 @@ docker rm 388 -> 'rm' exclui o conteiner '388' é os 3 primeiros caracteres do i
 
 docker rmi nm_image -> 'rmi' exclui a imagem 'nm_image' é a imagem que vai ser excluida
 
+
 docker run -dit nm_image -> caso ele não encontrar a imagem, é feito uma busca e é baixado essa imagem
 
 docker run -dit --name Ubuntu-erick ubuntu -> '--name' nomeia o conteiner, 'Ubuntu-erick' é o nome atribuido e 'ubuntu' é a imagem
@@ -194,6 +195,10 @@ docker-compose up -d -> para subir os containers dentro do docker-compose.yaml
 
 docker-compose down -d -> para parar os constainers
 
+docker node ls -> serve para listar todos os nós vinculado ao cluster
 
+			criando um serviço em um cluster
+			
+docker service create --name web-server --replicas 15 -p 80:80 httpd -> criando serviços
 
 
